@@ -70,8 +70,6 @@ unlock-astronaut mypassword123
 
 To lock again and restrict to Minecraft-only:
 
-csharp
-Copy code
 lock-astronaut mypassword123
 You can open multiple browsers or devices; unlock is per user/session.
 
