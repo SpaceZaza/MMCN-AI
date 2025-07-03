@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MC Helper</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #111111;
+      --panel-color: #181a1b;
+      --panel-alt: #23272a;
+      --text-color: #eeeeee;
+      --muted-color: #aaaaaa;
+      --accent-color: #fba617;
+      --accent-hover: #ffd766;
+      --border-radius: 16px;
+      --font-family: 'Open Sans', Arial, sans-serif;
+    }
+    body {
+      background: var(--bg-color);
+      color: var(--text-color);
+      font-family: var(--font-family);
+      margin: 0;
+      padding: 0;
+    }
+    #mc-chat-widget-container {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      z-index: 9999;
+      font-family: var(--font-family);
+    }
+    #mc-chat-minimized {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-color);
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      box-shadow: 0 3px 18px #000a;
+      cursor: pointer;
+      transition: box-shadow 0.2s;
+      border: 2px solid #fff3;
+    }
+    #mc-chat-minimized:hover {
+      box-shadow: 0 6px 32px #fba617aa;
+    }
+    #mc-chat-minimized img {
+      width: 36px;
+      height: 36px;
+    }
+    #mc-chatbot-widget {
+      max-width: 98vw;
+      width: 350px;
+      min-width: 270px;
+      min-height: 220px;
+      position: fixed;
+      left: 50vw;
+      top: 28vh;
+      margin: 0 auto;
+      border: 2.5px solid #23272a;
+      border-radius: var(--border-radius);
+      padding: 16px;
+      background: #191b1e;
+      color: var(--text-color);
+      box-shadow: 0 6px 32px 0 #000b, 0 2px 8px #fba61730;
+      display: none;
+      flex-direction: column;
+      overflow: auto;
+      resize: both;
+      animation: fadeIn .25s;
+      transition: width 0.13s cubic-bezier(.3,1.9,.3,1), height 0.13s cubic-bezier(.3,1.9,.3,1);
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(24px);} to {opacity: 1;transform: none;} }
+    #mc-chat-header {
+      background: linear-gradient(90deg, #181a1b 95%, #fba61722 100%);
+      border-bottom: 2px solid #fba61744;
+      padding-bottom: 6px;
+      margin-bottom: 10px;
+      border-radius: 12px 12px 0 0;
+      display: flex; align-items: center; justify-content: space-between; cursor: move;
+      user-select: none;
+    }
+    #mc-chatbot-widget h2 {
+      margin:0; font-size:1.3em; flex:1;display:flex;align-items:center;gap:11px;
+      color:#fba617; font-weight:900; letter-spacing:1px;
+    }
+    #mc-chatbot-widget button#mc-chat-close {
+      background: none;
+      border: none;
+      font-size: 2.2em;
+      line-height: 1;
+      color: #fba617;
+      cursor: pointer;
+      margin-left: 4px;
+      transition: color 0.2s;
+      font-weight: bold;
+      padding: 0 8px;
+    }
+    #mc-chatbot-widget button#mc-chat-close:hover {
+      color: #ffd766;
+    }
+    #mc-chat-history {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 80px;
+      max-height: none;
+      height: calc(100% - 170px);
+      overflow-y: auto;
+      margin-bottom: 12px;
+      background: #16181a;
+      padding: 12px 8px 8px 8px;
+      border-radius: 12px;
+      border: 1px solid #222;
+      font-size: 1em;
+      color: var(--text-color);
+      box-shadow: 0 1px 8px 0 #0007;
+      scrollbar-width: thin;
+      scrollbar-color: #fba617 #16181a;
+      transition: height 0.2s;
+    }
+    #mc-chat-history::-webkit-scrollbar {
+      width: 8px;
+    }
+    #mc-chat-history::-webkit-scrollbar-thumb {
+      background: #fba617;
+      border-radius: 6px;
+    }
+    .mc-bubble {
+      max-width: 82%;
+      margin-bottom: 9px;
+      padding: 12px 16px;
+      border-radius: 19px;
+      display: inline-block;
+      font-size: 1em;
+      line-height: 1.37;
+      word-break: break-word;
+      box-shadow: 0 2px 10px #0003;
+      position: relative;
+      white-space: pre-line;
+      animation: fadeInBubble 0.18s;
+    }
+    .mc-bubble.bot {
+      background: #23292d;
+      color: #fba617;
+      border-bottom-left-radius: 8px;
+      animation: slideInLeft 0.21s;
+    }
+    .mc-bubble.user {
+      background: #fba617;
+      color: #222;
+      align-self: flex-end;
+      margin-left: 18%;
+      border-bottom-right-radius: 8px;
+      animation: slideInRight 0.16s;
+    }
+    @keyframes slideInLeft { from {opacity:0;transform:translateX(-24px);} to {opacity:1;transform:none;} }
+    @keyframes slideInRight { from {opacity:0;transform:translateX(24px);} to {opacity:1;transform:none;} }
+    @keyframes fadeInBubble { from {opacity:0;} to {opacity:1;} }
+    #mc-chat-input {
+      width: 68%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1.5px solid #444;
+      background: #202225;
+      color: #eee;
+      margin-right: 3%;
+      font-size: 1em;
+      transition: border 0.2s, box-shadow 0.2s;
+      box-shadow: 0 1px 4px #0004;
+    }
+    #mc-chat-input:focus {
+      outline: none;
+      border: 2px solid #fba617;
+      box-shadow: 0 2px 10px #fba61755;
+    }
+    #mc-chat-send {
+      width: 26%;
+      padding: 10px 0;
+      border-radius: 8px;
+      background: #fba617;
+      color: #222;
+      border: none;
+      font-weight: bold;
+      font-size: 1em;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      box-shadow: 0 1px 8px 0 #fba61733, 0 0 0 #fba61755;
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #mc-chat-send:hover, #mc-chat-send:focus {
+      background: #ffd766;
+      color: #1a1a1a;
+      box-shadow: 0 1px 16px 2px #fba61744;
+    }
+    #mc-chat-charcount {
+      display: none;
+    }
+
+    /* SpaceZaza Easter Egg Animation & Cosmic BG */
+    @keyframes spacezaza-fade-in {
+      from { opacity: 0; transform: scale(0.9);}
+      to   { opacity: 1; transform: scale(1);}
+    }
+    @keyframes spacezaza-shine {
+      0% {background-position: 0%;}
+      100% {background-position: 150%;}
+    }
+    .spacezaza-egg {
+      background: radial-gradient(circle at 30% 40%, #74ebd5 0%, #ACB6E5 40%, #23292d 95%);
+      color: #161c29;
+      border: 2.5px solid #71eaff;
+      box-shadow: 0 2px 16px #5cfaffbb, 0 0 48px #23292d99;
+      font-weight: bold;
+      position: relative;
+      overflow: hidden;
+      animation: spacezaza-fade-in 0.7s cubic-bezier(.3,1.9,.3,1);
+    }
+    .spacezaza-egg::before {
+      content: '';
+      position: absolute;
+      left: -80px; top: 0;
+      width: 60%; height: 100%;
+      background: linear-gradient(120deg,rgba(255,255,255,0.12) 0%,rgba(255,255,255,0.35) 40%,rgba(255,255,255,0) 70%);
+      pointer-events: none;
+      animation: spacezaza-shine 1.7s cubic-bezier(.6,.4,.4,1.1);
+    }
+
+    @media (max-width: 600px) {
+      #mc-chat-widget-container { right: 3vw; bottom: 3vw; }
+      #mc-chatbot-widget { width: 96vw; min-width: 0; max-width: 99vw; }
+    }
+  </style>
+</head>
+<body>
+  <div id="mc-chat-widget-container">
+    <!-- Minimized (floating) chat button -->
+    <div id="mc-chat-minimized">
+      <img src="logo.png" alt="Chat">
+    </div>
+    <!-- Full chat widget -->
+    <div id="mc-chatbot-widget">
+      <div id="mc-chat-header">
+        <h2>
+          <img src="logo.png" style="width:32px;height:32px;border-radius:7px;box-shadow:0 2px 10px #0006;">
+          <span style="color:#fba617; font-weight:900; letter-spacing:1px;">MC Helper</span>
+        </h2>
+        <button id="mc-chat-close">&times;</button>
+      </div>
+      <div id="mc-chat-history"></div>
+      <div id="mc-chat-typing"></div>
+      <div style="display: flex; gap: 2%;">
+        <input id="mc-chat-input" type="text" placeholder="Ask me about Minecraft...">
+        <button id="mc-chat-send">Send</button>
+      </div>
+      <div id="mc-chat-charcount"></div>
+    </div>
+  </div>
+  <script src="mc-chatbot.js"></script>
+</body>
+</html>
